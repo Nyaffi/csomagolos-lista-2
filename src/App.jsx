@@ -161,12 +161,13 @@ const INTEZNIVALOK = [
   { kat: "Adminisztráció", teendo: "SZÉP kártya egyenleg ellenőrzése" },
   { kat: "Adminisztráció", teendo: "Útlevelek, jogosítvány érvényességének ellenőrzése" },
   { kat: "Adminisztráció", teendo: "Utasbiztosítás megkötése / ellenőrzése" },
-  { kat: "Kutyák", teendo: "Oltási könyvek előkészítése" },
-  { kat: "Autó", teendo: "Autópálya matrica megvásárlása" },
-  { kat: "Autó", teendo: "Műszaki, olajcsere ellenőrzése hosszú út előtt" },
-  { kat: "Programok", teendo: "Online jegyek megvásárlása (Aggtelek, Aquaticum, Aqua-Palace, Vadaspark)" },
+  { kat: "Kutyák", teendo: "Oltási könyvek előkészítése", felt: b => b.vanKutya },
+  { kat: "Autó 🚗", teendo: "Autópálya matrica megvásárlása" },
+  { kat: "Autó 🚗", teendo: "Műszaki, olajcsere ellenőrzése hosszú út előtt" },
+  { kat: "Autó 🚗", teendo: "Forgalmi engedély, zöldkártya érvényességének ellenőrzése" },
+  { kat: "Programok", teendo: "Online jegyek / foglalások előkészítése az útiterv programjaihoz" },
   { kat: "Csomagolás", teendo: "Bevásárlás: gyógyszerek, naptej" },
-  { kat: "Csomagolás", teendo: "Bevásárlás: önellátós kajához alapanyagok" },
+  { kat: "Csomagolás", teendo: "Bevásárlás: önellátós kajához alapanyagok", felt: b => b.onellatos },
   { kat: "Repülő ✈️", teendo: "Online check-in, beszállókártyák letöltése/kinyomtatása", felt: b => b.eszkozok.includes("repulo") },
   { kat: "Repülő ✈️", teendo: "Kézipoggyász méretének leellenőrzése otthon (mérőkeret vagy mérőszalag)", felt: b => b.eszkozok.includes("repulo") },
   { kat: "Repülő ✈️", teendo: "Reptéri parkolás / transzfer lefoglalása és kifizetése", felt: b => b.eszkozok.includes("repulo") },
@@ -257,6 +258,27 @@ function Fej({ cim, al }) {
       {al && <div style={{ fontSize: 11, color: COLORS.muted }}>{al}</div>}
     </div>
   );
+}
+
+// Beállítások oldal segédkomponensei — MODUL SZINTEN, nem a BeallitasokOldal belsejében!
+// Ha ezek egy render-függvény törzsében lennének újradefiniálva, minden state-változásnál
+// (pl. minden billentyűleütésnél) új komponens-típusnak számítanának, React unmountolná/
+// remountolná őket -> elveszne az input fókusza, és a böngésző visszaugorna a lap tetejére.
+function Kartya({ children }) {
+  return (
+    <div style={{ background:COLORS.white, borderRadius:16, padding:"18px 20px", marginBottom:14, boxShadow:"0 1px 4px rgba(0,0,0,0.06)", border:`1px solid ${COLORS.border}` }}>
+      {children}
+    </div>
+  );
+}
+function H({ children }) {
+  return <h2 style={{ fontFamily:"Nunito,sans-serif", fontSize:15, fontWeight:800, color:COLORS.dark, margin:"0 0 12px" }}>{children}</h2>;
+}
+function L({ children }) {
+  return <label style={{ display:"block", fontSize:11, fontWeight:600, color:COLORS.muted, marginBottom:3, textTransform:"uppercase", letterSpacing:.5 }}>{children}</label>;
+}
+function I(props) {
+  return <input {...props} style={{ width:"100%", padding:"8px 11px", borderRadius:9, border:`1.5px solid ${COLORS.border}`, fontSize:13, color:COLORS.text, background:"#FAFAFA", outline:"none", boxSizing:"border-box", fontFamily:"inherit", ...props.style }} />;
 }
 
 // ─── FÜLSÁV ──────────────────────────────────────────────────────────────────
@@ -557,7 +579,7 @@ function BevasarlasTab({ beall, checked, onToggle }) {
 }
 
 function IntezniTab({ beall, checked, onToggle }) {
-  const katSzin = { "Foglalás":"#DBEAFE", "Adminisztráció":"#FEF3C7", "Kutyák":"#EDE9FE", "Autó":"#D1FAE5", "Programok":"#FEE2E2", "Csomagolás":"#F3F4F6", "Repülő ✈️":"#E0E7FF" };
+  const katSzin = { "Foglalás":"#DBEAFE", "Adminisztráció":"#FEF3C7", "Kutyák":"#EDE9FE", "Autó 🚗":"#D1FAE5", "Programok":"#FEE2E2", "Csomagolás":"#F3F4F6", "Repülő ✈️":"#E0E7FF" };
   const csoportok = INTEZNIVALOK.filter(t => !t.felt || t.felt(beall)).reduce((acc, t) => {
     if (!acc[t.kat]) acc[t.kat] = [];
     acc[t.kat].push(t.teendo);
@@ -578,14 +600,6 @@ function IntezniTab({ beall, checked, onToggle }) {
 
 function BeallitasokOldal({ beall, setBeall, onGeneral }) {
   const toggle = (arr, val) => arr.includes(val) ? arr.filter(x=>x!==val) : [...arr, val];
-  const Kartya = ({ children }) => (
-    <div style={{ background:COLORS.white, borderRadius:16, padding:"18px 20px", marginBottom:14, boxShadow:"0 1px 4px rgba(0,0,0,0.06)", border:`1px solid ${COLORS.border}` }}>
-      {children}
-    </div>
-  );
-  const H = ({ children }) => <h2 style={{ fontFamily:"Nunito,sans-serif", fontSize:15, fontWeight:800, color:COLORS.dark, margin:"0 0 12px" }}>{children}</h2>;
-  const L = ({ children }) => <label style={{ display:"block", fontSize:11, fontWeight:600, color:COLORS.muted, marginBottom:3, textTransform:"uppercase", letterSpacing:.5 }}>{children}</label>;
-  const I = (props) => <input {...props} style={{ width:"100%", padding:"8px 11px", borderRadius:9, border:`1.5px solid ${COLORS.border}`, fontSize:13, color:COLORS.text, background:"#FAFAFA", outline:"none", boxSizing:"border-box", fontFamily:"inherit", ...props.style }} />;
 
   return (
     <div style={{ maxWidth:660, margin:"0 auto", padding:"0 16px 40px" }}>
